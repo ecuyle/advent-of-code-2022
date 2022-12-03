@@ -1,9 +1,9 @@
 package main
 
 import (
-    "fmt"
-    "os"
     "bufio"
+    "fmt"
+    "github.com/ecuyle/advent-of-code-2022/utils"
 )
 
 func getPointsBetweenChoices(choice string, opponentChoice string) int {
@@ -24,18 +24,8 @@ func getPointsBetweenChoices(choice string, opponentChoice string) int {
     return 0 + points[choice]
 }
 
-func readfile(path string) *os.File {
-    file, err := os.Open(path)
-
-    if err != nil {
-        panic(err)
-    }
-
-    return file
-}
-
 func partOne() {
-    file := readfile("./input.txt")
+    file := utils.Readfile("./input.txt")
     defer file.Close()
     scanner := bufio.NewScanner(file)
     results := 0
@@ -74,7 +64,7 @@ func getRequiredPlay(opponentChoice string, target string) string {
 }
 
 func partTwo() {
-    file := readfile("./input.txt")
+    file := utils.Readfile("./input.txt")
     defer file.Close()
     scanner := bufio.NewScanner(file)
     results := 0
