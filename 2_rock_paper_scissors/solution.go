@@ -34,7 +34,7 @@ func readfile(path string) *os.File {
     return file
 }
 
-func main() {
+func partOne() {
     file := readfile("./input.txt")
     defer file.Close()
     scanner := bufio.NewScanner(file)
@@ -48,4 +48,49 @@ func main() {
     }
 
     fmt.Println(results)
+}
+
+func getRequiredPlay(opponentChoice string, target string) string {
+    alphabetOffsetFromZero := 65
+    if target == "Y" {
+        return opponentChoice
+    } else if target == "X" {
+        play := int(opponentChoice[0]) - alphabetOffsetFromZero - 1
+
+        if play < 0 {
+            return "C"
+        }
+
+        return string(play + alphabetOffsetFromZero)
+    }
+
+    play := int(opponentChoice[0]) - alphabetOffsetFromZero + 1
+
+    if play > 2 {
+        return "A"
+    }
+
+    return string(play + alphabetOffsetFromZero)
+}
+
+func partTwo() {
+    file := readfile("./input.txt")
+    defer file.Close()
+    scanner := bufio.NewScanner(file)
+    results := 0
+
+    for scanner.Scan() {
+        line := scanner.Text()
+        opponent := string(line[0])
+        target := string(line[2])
+        me := getRequiredPlay(opponent, target)
+        results += getPointsBetweenChoices(me, opponent)
+    }
+
+    fmt.Println(results)
+}
+
+func main() {
+    partOne()
+    partTwo()
 }
