@@ -48,7 +48,46 @@ func partOne() {
     fmt.Println(sum)
 }
 
+func partTwo() {
+    file := utils.Readfile("./input.txt")
+    defer file.Close()
+    scanner := bufio.NewScanner(file)
+    sum := 0
+    counter := 0
+    seen := map[rune]int{}
+    const ELVES_PER_GROUP = 3
+
+    for scanner.Scan() {
+        line := scanner.Text()
+        localSeen := map[rune]int{}
+
+        for _, char := range line {
+            // if the character is unique in this line, add it to the overall seen map
+            if localSeen[char] != 1 && seen[char] < counter + 1 {
+                localSeen[char] = 1
+                seen[char] += 1
+            }
+
+            if seen[char] == ELVES_PER_GROUP {
+                sum += calculatePriorityFromUnicodeChar(char)
+                break
+            }
+        }
+
+        // we've hit the third elf in the group, reset
+        if counter == 2 {
+            counter = 0
+            seen = map[rune]int{}
+        } else {
+            counter += 1
+        }
+    }
+
+    fmt.Println(sum)
+}
+
 func main() {
     partOne()
+    partTwo()
 }
 
