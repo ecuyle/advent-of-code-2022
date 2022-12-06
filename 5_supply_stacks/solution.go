@@ -55,46 +55,6 @@ func moveOneAtATime(count int, from int, to int, graph [][]string) [][]string {
 	return graph
 }
 
-func partOne() {
-	file := utils.Readfile("./input.txt")
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	graph := []string{}
-	commands := []string{}
-	isGraphComplete := false
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if line == "" {
-			isGraphComplete = true
-			continue
-		}
-
-		if isGraphComplete {
-			commands = append(commands, line)
-			continue
-		}
-
-		graph = append(graph, line)
-	}
-
-	parsedGraph := parseGraphIntoArrays(graph)
-
-	for _, command := range commands {
-		parsedCommand := parseCommand(command)
-		parsedGraph = moveOneAtATime(parsedCommand[0], parsedCommand[1], parsedCommand[2], parsedGraph)
-	}
-
-	result := ""
-
-	for _, column := range parsedGraph {
-		result += column[len(column)-1]
-	}
-
-	fmt.Println(result)
-}
-
 func moveAllAtOnce(count int, from int, to int, graph [][]string) [][]string {
 	lenFrom := len(graph[from])
 
@@ -109,8 +69,8 @@ func moveAllAtOnce(count int, from int, to int, graph [][]string) [][]string {
 	return graph
 }
 
-func partTwo() {
-	file := utils.Readfile("./input.txt")
+func getTopsOfStacksAfterMoving(inputPath string, craneType int) string {
+	file := utils.Readfile(inputPath)
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	graph := []string{}
@@ -135,9 +95,15 @@ func partTwo() {
 
 	parsedGraph := parseGraphIntoArrays(graph)
 
+	moveFunc := moveOneAtATime
+
+	if craneType == 9001 {
+		moveFunc = moveAllAtOnce
+	}
+
 	for _, command := range commands {
 		parsedCommand := parseCommand(command)
-		parsedGraph = moveAllAtOnce(parsedCommand[0], parsedCommand[1], parsedCommand[2], parsedGraph)
+		parsedGraph = moveFunc(parsedCommand[0], parsedCommand[1], parsedCommand[2], parsedGraph)
 	}
 
 	result := ""
@@ -146,10 +112,10 @@ func partTwo() {
 		result += column[len(column)-1]
 	}
 
-	fmt.Println(result)
+	return result
 }
 
 func main() {
-	partOne()
-	partTwo()
+	fmt.Println(getTopsOfStacksAfterMoving("./input.txt", 9000))
+	fmt.Println(getTopsOfStacksAfterMoving("./input.txt", 9001))
 }
