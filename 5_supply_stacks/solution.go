@@ -44,12 +44,12 @@ func parseCommand(command string) []int {
 	return []int{count, from - 1, to - 1}
 }
 
-func move(count int, from int, to int, graph [][]string) [][]string {
+func moveOneAtATime(count int, from int, to int, graph [][]string) [][]string {
 	for i := 0; i < count; i++ {
-		fromBucket := graph[from]
-		toBucket := graph[to]
-		graph[to] = append(toBucket, fromBucket[len(fromBucket)-1])
-		graph[from] = fromBucket[:len(fromBucket)-1]
+		frombucket := graph[from]
+		tobucket := graph[to]
+		graph[to] = append(tobucket, frombucket[len(frombucket)-1])
+		graph[from] = frombucket[:len(frombucket)-1]
 	}
 
 	return graph
@@ -83,7 +83,61 @@ func partOne() {
 
 	for _, command := range commands {
 		parsedCommand := parseCommand(command)
-		parsedGraph = move(parsedCommand[0], parsedCommand[1], parsedCommand[2], parsedGraph)
+		parsedGraph = moveOneAtATime(parsedCommand[0], parsedCommand[1], parsedCommand[2], parsedGraph)
+	}
+
+	result := ""
+
+	for _, column := range parsedGraph {
+		result += column[len(column)-1]
+	}
+
+	fmt.Println(result)
+}
+
+func moveAllAtOnce(count int, from int, to int, graph [][]string) [][]string {
+	lenFrom := len(graph[from])
+
+	for i := (lenFrom - count); i < lenFrom; i++ {
+		frombucket := graph[from]
+		tobucket := graph[to]
+		graph[to] = append(tobucket, frombucket[i])
+	}
+
+	graph[from] = graph[from][:lenFrom-count]
+
+	return graph
+}
+
+func partTwo() {
+	file := utils.Readfile("./input.txt")
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	graph := []string{}
+	commands := []string{}
+	isGraphComplete := false
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if line == "" {
+			isGraphComplete = true
+			continue
+		}
+
+		if isGraphComplete {
+			commands = append(commands, line)
+			continue
+		}
+
+		graph = append(graph, line)
+	}
+
+	parsedGraph := parseGraphIntoArrays(graph)
+
+	for _, command := range commands {
+		parsedCommand := parseCommand(command)
+		parsedGraph = moveAllAtOnce(parsedCommand[0], parsedCommand[1], parsedCommand[2], parsedGraph)
 	}
 
 	result := ""
@@ -97,4 +151,5 @@ func partOne() {
 
 func main() {
 	partOne()
+	partTwo()
 }
