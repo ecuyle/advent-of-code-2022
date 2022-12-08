@@ -1,57 +1,47 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"sort"
 	"strconv"
+
+	"github.com/ecuyle/advent-of-code-2022/utils"
 )
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
+func aggregateCaloriesPerElf(lines []string) []int {
+	caloriesPerElf := []int{0}
+	currentCalories := 0
 
-func calculateTotalCalories(places int, filepath string) int {
-	file, err := os.Open(filepath)
-	check(err)
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	caloricHistory := []int{0}
-	calories := 0
-
-	for scanner.Scan() {
-		raw := scanner.Text()
-
-		if raw != "" {
-			value, err := strconv.Atoi(raw)
-			check(err)
-			calories += value
+	for _, line := range lines {
+		if line == "" {
+			caloriesPerElf = append(caloriesPerElf, currentCalories)
+			currentCalories = 0
 			continue
 		}
 
-		caloricHistory = append(caloricHistory, calories)
-		calories = 0
+		caloriesFromLine, err := strconv.Atoi(line)
+		utils.CheckError(err)
+		currentCalories += caloriesFromLine
 	}
 
-	sort.Ints(caloricHistory)
-	totalCalories := 0
+	return caloriesPerElf
+}
 
-	for i := 0; i < places; i++ {
-		if len(caloricHistory) <= i {
-			break
-		}
+func calculateTotalCaloriesForNElves(elves int, lines []string) int {
+    caloriesPerElf := aggregateCaloriesPerElf(lines)
+	sort.Slice(caloriesPerElf, func(a, b int) bool {
+		return caloriesPerElf[a] > caloriesPerElf[b]
+	})
 
-		totalCalories += caloricHistory[len(caloricHistory)-i-1]
+	if len(caloriesPerElf) < elves {
+		return utils.Sum(caloriesPerElf)
 	}
 
-	return totalCalories
+	return utils.Sum(caloriesPerElf[:elves])
 }
 
 func main() {
-	fmt.Println("Max calories carried by an elf is", calculateTotalCalories(1, "./input.txt"))
-	fmt.Println("Total calories of top three elves are:", calculateTotalCalories(3, "./input.txt"))
+	lines := utils.ReadFileIntoLines("./input.txt")
+	fmt.Println("Max calories carried by an elf is", calculateTotalCaloriesForNElves(1, lines))
+	fmt.Println("Total calories of top three elves are:", calculateTotalCaloriesForNElves(3, lines))
 }
