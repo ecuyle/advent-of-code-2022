@@ -1,16 +1,29 @@
 package utils
 
 import (
-    "os"
+	"bufio"
+	"os"
 )
 
 func Readfile(path string) *os.File {
-    file, err := os.Open(path)
+	file, err := os.Open(path)
 
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
-    return file
+	return file
 }
 
+func ReadFileIntoLines(path string) []string {
+	file := Readfile(path)
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	lines := []string{}
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	return lines
+}
