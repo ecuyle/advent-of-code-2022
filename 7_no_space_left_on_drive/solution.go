@@ -29,7 +29,6 @@ func updateParentSize(parent *node, size int) {
 }
 
 func addChild(parent *node, child *node) {
-	fmt.Println("Adding parent to child", parent.name, child.name)
 	parent.children = append(parent.children, child)
 	child.parent = parent
 	updateParentSize(parent, child.size)
@@ -44,9 +43,8 @@ func getRoot(node *node) *node {
 }
 
 func cd(targetDir string, cwd *node) (*node, error) {
-	fmt.Println("Attempting to cd:", cwd.name, targetDir)
 
-	if targetDir == "/"{
+	if targetDir == "/" {
 		return getRoot(cwd), nil
 	}
 
@@ -55,7 +53,6 @@ func cd(targetDir string, cwd *node) (*node, error) {
 	}
 
 	if targetDir == ".." {
-		fmt.Println("Going up to", cwd.parent.name)
 		return cwd.parent, nil
 	}
 
@@ -91,7 +88,6 @@ func createFsTree(inputPath string) *node {
 			utils.CheckError(err)
 			cwd = dir
 
-			fmt.Println("Changed current directory to", cwd)
 		} else if line[0:4] != "$ ls" {
 			var size int
 			var filename string
@@ -119,8 +115,8 @@ func findSumOfDirsUnderSize(root *node, maxSize int) int {
 		sum += root.size
 	}
 
-	for _, children := range root.children {
-		sum += findSumOfDirsUnderSize(children, maxSize)
+	for _, child := range root.children {
+		sum += findSumOfDirsUnderSize(child, maxSize)
 	}
 
 	return sum
@@ -131,19 +127,42 @@ func partOne(inputPath string) int {
 	return findSumOfDirsUnderSize(root, 100000)
 }
 
-func partTwo(inputPath string) {
-	file := utils.Readfile(inputPath)
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		fmt.Println(line)
+func findSmallestDirToDelete(root *node, targetSize int) (*node, error) {
+	if root.kind == "f" || root.size < targetSize {
+		return nil, fmt.Errorf("could not find directory smaller than %d", targetSize)
 	}
+
+	closest := root
+
+	for _, child := range root.children {
+		result, err := findSmallestDirToDelete(child, targetSize)
+
+		if err != nil {
+			continue
+		}
+
+		if result.size < closest.size {
+			closest = result
+		}
+	}
+
+	return closest, nil
+}
+
+func partTwo(inputPath string) int {
+	const TOTAL_DISK_SPACE = 70000000
+	const REQUIRED_FREE_SPACE = 30000000
+	root := createFsTree(inputPath)
+	unusedFreeSpace := TOTAL_DISK_SPACE - root.size
+	dir, err := findSmallestDirToDelete(root, REQUIRED_FREE_SPACE-unusedFreeSpace)
+	utils.CheckError(err)
+
+	return dir.size
 }
 
 func main() {
-	fmt.Println(partOne("./input_test.txt"))
-	fmt.Println(partOne("./input.txt"))
-	// partTwo("./input_test.txt")
+	fmt.Println("Part 1 Test:", partOne("./input_test.txt"))
+	fmt.Println("Part 1 Actual:", partOne("./input.txt"))
+	fmt.Println("Part 2 Test:", partTwo("./input_test.txt"))
+	fmt.Println("Part 2 Actual:", partTwo("./input.txt"))
 }
