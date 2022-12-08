@@ -1,86 +1,96 @@
 package main
 
 import (
-    "bufio"
-    "fmt"
-    "github.com/ecuyle/advent-of-code-2022/utils"
+	"fmt"
+
+	"github.com/ecuyle/advent-of-code-2022/utils"
 )
 
-func getPointsBetweenChoices(choice string, opponentChoice string) int {
-    points := map[string]int{
-        "A": 1,
-        "B": 2,
-        "C": 3,
-    }
+func rotate(choice string, count int) string {
+	choices := []string{"A", "B", "C"}
+	// get 0 indexed value
+	choiceIndex := int(choice[0]) - 65
+	total := choiceIndex + count
 
-    diff := int(choice[0]) - int(opponentChoice[0])
+	if total < 0 {
+		remainder := (len(choices) - total) % len(choices)
+		return choices[len(choices)-remainder]
+	}
 
-    if diff == 0 {
-        return 3 + points[choice]
-    } else if diff == 1 || diff == -2 {
-        return 6 + points[choice]
-    }
-
-    return 0 + points[choice]
+	remainder := total % len(choices)
+	return choices[remainder]
 }
 
-func partOne() {
-    file := utils.Readfile("./input.txt")
-    defer file.Close()
-    scanner := bufio.NewScanner(file)
-    results := 0
+// returns 6 if win, 3 if tie, 0 if loss
+func play(mine string, opponent string) int {
+	if mine == opponent {
+		return 3
+	}
 
-    for scanner.Scan() {
-        line := scanner.Text()
-        opponent := string(line[0])
-        me := string(int(string(line[2])[0] - 23))
-        results += getPointsBetweenChoices(me, opponent)
+    if rotate(opponent, 1) == mine {
+        return 6
     }
 
-    fmt.Println(results)
+	return 0
 }
 
-func getRequiredPlay(opponentChoice string, target string) string {
-    alphabetOffsetFromZero := 65
-    if target == "Y" {
-        return opponentChoice
-    } else if target == "X" {
-        play := int(opponentChoice[0]) - alphabetOffsetFromZero - 1
+func getPointsBetweenChoices(mine string, opponent string) int {
+	pointsForChoice := int(mine[0]) - 65 + 1
 
-        if play < 0 {
-            return "C"
-        }
-
-        return string(play + alphabetOffsetFromZero)
-    }
-
-    play := int(opponentChoice[0]) - alphabetOffsetFromZero + 1
-
-    if play > 2 {
-        return "A"
-    }
-
-    return string(play + alphabetOffsetFromZero)
+	return pointsForChoice + play(mine, opponent)
 }
 
-func partTwo() {
-    file := utils.Readfile("./input.txt")
-    defer file.Close()
-    scanner := bufio.NewScanner(file)
-    results := 0
+func calculatePointsFromStrategyGuide(lines [][]string) int {
+	results := 0
 
-    for scanner.Scan() {
-        line := scanner.Text()
-        opponent := string(line[0])
-        target := string(line[2])
-        me := getRequiredPlay(opponent, target)
-        results += getPointsBetweenChoices(me, opponent)
-    }
+	for _, line := range lines {
+		opponent := line[0]
+		me := line[1]
+		results += getPointsBetweenChoices(me, opponent)
+	}
 
-    fmt.Println(results)
+	return results
+}
+
+func getRequiredPlay(opponentChoice string, instruction string) string {
+	instructions := map[string]int{
+		"A": -1,
+		"B": 0,
+		"C": 1,
+	}
+
+	return rotate(opponentChoice, instructions[instruction])
+}
+
+func calculatePointsAfterUpdate(lines [][]string) int {
+	points := 0
+
+	for _, line := range lines {
+		opponent := line[0]
+		instruction := line[1]
+		me := getRequiredPlay(opponent, instruction)
+		points += getPointsBetweenChoices(me, opponent)
+	}
+
+	return points
+}
+
+func normalizeLinesForPlay(lines []string) [][]string {
+	normalized := [][]string{}
+
+	for _, line := range lines {
+		var opponent, mine string
+		fmt.Sscanf(line, "%s %s", &opponent, &mine)
+		// converts x|y|z to a|b|c
+		normalized = append(normalized, []string{opponent, string(int(mine[0]) - 23)})
+	}
+
+	return normalized
 }
 
 func main() {
-    partOne()
-    partTwo()
+	lines := utils.ReadFileIntoLines("./input.txt")
+	normalized := normalizeLinesForPlay(lines)
+	fmt.Println(calculatePointsFromStrategyGuide(normalized))
+	fmt.Println(calculatePointsAfterUpdate(normalized))
 }
