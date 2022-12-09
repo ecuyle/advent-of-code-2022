@@ -27,9 +27,9 @@ func play(mine string, opponent string) int {
 		return 3
 	}
 
-    if rotate(opponent, 1) == mine {
-        return 6
-    }
+	if rotate(opponent, 1) == mine {
+		return 6
+	}
 
 	return 0
 }

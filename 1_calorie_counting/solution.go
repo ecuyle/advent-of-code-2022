@@ -28,7 +28,7 @@ func aggregateCaloriesPerElf(lines []string) []int {
 }
 
 func calculateTotalCaloriesForNElves(elves int, lines []string) int {
-    caloriesPerElf := aggregateCaloriesPerElf(lines)
+	caloriesPerElf := aggregateCaloriesPerElf(lines)
 	sort.Slice(caloriesPerElf, func(a, b int) bool {
 		return caloriesPerElf[a] > caloriesPerElf[b]
 	})
