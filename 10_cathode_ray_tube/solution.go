@@ -16,7 +16,7 @@ type instruction struct {
 	value   int
 }
 
-func execute(instruction instruction, cycle int, x int, midCycleCallback func(cycle int)) (int, int) {
+func execute(instruction instruction, cycle int, midCycleCallback func(cycle int)) int {
 	commandsToCycleLength := map[string]int{
 		"noop": 1,
 		"addx": 2,
@@ -27,14 +27,9 @@ func execute(instruction instruction, cycle int, x int, midCycleCallback func(cy
 	for i := 0; i < requiredCycles; i++ {
 		cycle += 1
 		midCycleCallback(cycle)
-
-		if i == requiredCycles-1 {
-			x += instruction.value
-		}
-
 	}
 
-	return cycle, x
+	return cycle
 }
 
 func sumSignalStrengths(instructions []instruction) int {
@@ -43,15 +38,15 @@ func sumSignalStrengths(instructions []instruction) int {
 	cycle := 0
 
 	for _, instruction := range instructions {
-		cycle, x = execute(instruction, cycle, x, func(cycle int) {
+		cycle = execute(instruction, cycle, func(cycle int) {
 			const SIGNAL_STRENTGH_START = 20
 			const SIGNAL_INTERVAL = 40
 
 			if ((cycle - SIGNAL_STRENTGH_START) % SIGNAL_INTERVAL) == 0 {
 				sum += calculateSignalStrength(x, cycle)
 			}
-
 		})
+        x+= instruction.value
 	}
 
 	return sum
@@ -88,10 +83,10 @@ func renderImage(instructions []instruction) {
 	crt := []string{}
 
 	for _, instruction := range instructions {
-		cycle, x = execute(instruction, cycle, x, func(cycle int) {
+		cycle = execute(instruction, cycle, func(cycle int) {
 			draw(&crt, cycle, x)
 		})
-
+        x += instruction.value
 	}
 
 	visualizeCrt(&crt)
