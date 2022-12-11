@@ -8,23 +8,27 @@ import (
 )
 
 type node struct {
-	x float64
-	y float64
+	x    float64
+	y    float64
+	next *node
 }
 
-func moveHead(node node, moveSet node) node {
-	node.x += moveSet.x
-	node.y += moveSet.y
+func makeLinkedList(x float64, y float64, length int) *node {
+	head := node{x, y, nil}
+	next := &head
 
-	fmt.Println("H:", node)
-	return node
+	for i := 1; i < length; i++ {
+		next.next = &node{x, y, nil}
+		next = next.next
+	}
+
+	return &head
 }
 
-func moveTail(head node, tail node) node {
+func moveTail(head *node, tail *node) {
 	for math.Abs(head.x-tail.x) >= 2 || math.Abs(head.y-tail.y) >= 2 {
 		diffX := head.x - tail.x
 		diffY := head.y - tail.y
-		fmt.Println(diffX, diffY)
 
 		if math.Abs(diffX) > 0 {
 			tail.x += math.Copysign(1, diffX)
@@ -35,30 +39,51 @@ func moveTail(head node, tail node) node {
 		}
 	}
 
-	fmt.Println("T:", tail)
-	return tail
+	if tail.next != nil {
+		moveTail(tail, tail.next)
+	}
 }
 
-func getPosition(node node) string {
+func getPosition(node *node) string {
 	return fmt.Sprintf("%f-%f", node.x, node.y)
 }
 
-func uniqueTailVisits(directions []string) int {
+type moveSet struct {
+	x float64
+	y float64
+}
+
+func moveHead(node *node, moveSet moveSet) {
+	node.x += moveSet.x
+	node.y += moveSet.y
+
+	if node.next != nil {
+		moveTail(node, node.next)
+	}
+}
+
+func getTail(node *node) *node {
+	if node.next == nil {
+		return node
+	}
+
+	return getTail(node.next)
+}
+
+func uniqueTailVisits(directions []string, head *node) int {
 	tVisited := map[string]bool{}
-	h := node{0, 0}
-	t := node{0, 0}
-	moveSets := map[string]node{
+	moveSets := map[string]moveSet{
 		"U": {0, 1},
 		"R": {1, 0},
 		"D": {0, -1},
 		"L": {-1, 0},
 	}
 
+	tail := getTail(head)
+
 	for _, direction := range directions {
-		fmt.Println(direction)
-		h = moveHead(h, moveSets[direction])
-		t = moveTail(h, t)
-		tVisited[getPosition(t)] = true
+		moveHead(head, moveSets[direction])
+		tVisited[getPosition(tail)] = true
 	}
 
 	return len(tVisited)
@@ -87,6 +112,7 @@ func normalizeDirections(lines []string) []string {
 func main() {
 	lines := utils.ReadFileIntoLines("./input.txt")
 	lines = normalizeDirections(lines)
-	fmt.Println(uniqueTailVisits(lines))
-	fmt.Println(partTwo(lines))
+
+	fmt.Println(uniqueTailVisits(lines, makeLinkedList(0, 0, 2)))
+	fmt.Println(uniqueTailVisits(lines, makeLinkedList(0, 0, 10)))
 }
