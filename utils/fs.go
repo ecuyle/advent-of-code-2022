@@ -27,3 +27,10 @@ func ReadFileIntoLines(path string) []string {
 
 	return lines
 }
+
+func ReadFileIntoString(path string) string {
+	file, err := os.ReadFile(path)
+	CheckError(err)
+
+	return string(file)
+}
