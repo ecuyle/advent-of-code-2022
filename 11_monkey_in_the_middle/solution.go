@@ -10,6 +10,7 @@ import (
 )
 
 type monkey struct {
+	divisor        int
 	items          *[]int
 	itemsInspected int
 	operation      func(int) int
@@ -21,6 +22,12 @@ func decreaseWorryLevel(worry int) int {
 }
 
 func simulateRound(monkeys *[]*monkey, shouldReduceWorry bool) *[]*monkey {
+	aggregatedDivisor := 1
+
+	for _, m := range *monkeys {
+		aggregatedDivisor *= m.divisor
+	}
+
 	for _, m := range *monkeys {
 		for _, item := range *m.items {
 			m.itemsInspected += 1
@@ -28,7 +35,9 @@ func simulateRound(monkeys *[]*monkey, shouldReduceWorry bool) *[]*monkey {
 
 			if shouldReduceWorry {
 				level = decreaseWorryLevel(level)
-            }
+			} else {
+				level %= aggregatedDivisor
+			}
 
 			toMonkey := (*monkeys)[m.test(level)]
 			*toMonkey.items = append(*toMonkey.items, level)
@@ -49,7 +58,6 @@ func getMonkeyBusinessLevel(monkeys *[]*monkey, rounds int, shouldReduceWorry bo
 	for i := 0; i < rounds; i++ {
 		monkeys = simulateRound(monkeys, shouldReduceWorry)
 	}
-	printMonkeys(monkeys)
 
 	levels := []int{}
 
@@ -62,9 +70,6 @@ func getMonkeyBusinessLevel(monkeys *[]*monkey, rounds int, shouldReduceWorry bo
 	})
 
 	return levels[0] * levels[1]
-}
-
-func partTwo(monkeys []monkey) {
 }
 
 func getItems(str string) *[]int {
@@ -129,12 +134,17 @@ func makeOperation(str string) func(int) int {
 	}
 }
 
-func makeTest(conditionStr string, trueStr string, falseStr string) func(int) int {
+func getDivisor(conditionStr string) int {
 	var divisor int
 	fmt.Sscanf(conditionStr, "Test: divisible by %d", &divisor)
 
+	return divisor
+}
+
+func makeTest(conditionStr string, trueStr string, falseStr string) func(int) int {
+
 	return func(value int) int {
-		if (value % divisor) == 0 {
+		if (value % getDivisor(conditionStr)) == 0 {
 			return getTargetMonkey(trueStr)
 		}
 
@@ -144,6 +154,7 @@ func makeTest(conditionStr string, trueStr string, falseStr string) func(int) in
 
 func makeMonkey(lines []string) *monkey {
 	return &monkey{
+		divisor:        getDivisor(lines[3]),
 		items:          getItems(lines[1]),
 		itemsInspected: 0,
 		operation:      makeOperation(lines[2]),
@@ -169,9 +180,9 @@ func normalizeFile(file string) *[]*monkey {
 }
 
 func main() {
-	file := utils.ReadFileIntoString("./input_test.txt")
+	file := utils.ReadFileIntoString("./input.txt")
 	monkeys := normalizeFile(file)
 
-	// fmt.Println(getMonkeyBusinessLevel(monkeys, 20, true))
-	fmt.Println(getMonkeyBusinessLevel(monkeys, 1000, false))
+	fmt.Println(getMonkeyBusinessLevel(monkeys, 20, true))
+	fmt.Println(getMonkeyBusinessLevel(monkeys, 10000, false))
 }
