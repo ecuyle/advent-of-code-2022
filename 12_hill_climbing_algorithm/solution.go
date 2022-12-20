@@ -15,8 +15,8 @@ type Point struct {
 
 type TopologyMap struct {
 	graph   [][]*Point
-	start   *Point
-	end     *Point
+	low     *Point
+	high    *Point
 	visited *map[string]bool
 }
 
@@ -25,14 +25,14 @@ type PointDistance struct {
 	distance int
 }
 
-func getEligiblePoints(topologyMap *TopologyMap, pointDistance *PointDistance) []*PointDistance {
+func getEligiblePoints(topologyMap *TopologyMap, pointDistance *PointDistance, direction string) []*PointDistance {
 	point := pointDistance.point
 	distance := pointDistance.distance
 	points := []*PointDistance{}
 
-	for _, direction := range [][]int{{0, 1}, {0, -1}, {-1, 0}, {1, 0}} {
-		newX := point.x + direction[0]
-		newY := point.y + direction[1]
+	for _, instruction := range [][]int{{0, 1}, {0, -1}, {-1, 0}, {1, 0}} {
+		newX := point.x + instruction[0]
+		newY := point.y + instruction[1]
 
 		if newY < 0 || newY >= len(topologyMap.graph) || newX < 0 || newX >= len(topologyMap.graph[0]) {
 			continue
@@ -44,7 +44,7 @@ func getEligiblePoints(topologyMap *TopologyMap, pointDistance *PointDistance) [
 			continue
 		}
 
-		if (newPoint.value - point.value) > 1 {
+		if (direction == "up" && (newPoint.value-point.value) > 1) || (direction == "down" && ((point.value - newPoint.value) > 1)) {
 			continue
 		}
 
@@ -55,26 +55,31 @@ func getEligiblePoints(topologyMap *TopologyMap, pointDistance *PointDistance) [
 	return points
 }
 
-func getFewestSteps(topologyMap *TopologyMap) int {
-	queue := []*PointDistance{{topologyMap.start, 0}}
+func getFewestSteps(topologyMap *TopologyMap, direction string) int {
+	start := topologyMap.low
+	target := topologyMap.high
+
+	if direction == "down" {
+		start = topologyMap.high
+		target = topologyMap.low
+	}
+
+	queue := []*PointDistance{{start, 0}}
 
 	for len(queue) != 0 {
 		popped := queue[0]
 		point := popped.point
 
-		if point.value == ('z' + 1) {
+		if point.value == target.value {
 			return popped.distance
 		}
 
 		queue = queue[1:]
-		eligiblePoints := getEligiblePoints(topologyMap, popped)
+		eligiblePoints := getEligiblePoints(topologyMap, popped, direction)
 		queue = append(queue, eligiblePoints...)
 	}
 
 	return 0
-}
-
-func partTwo(topologyMap *TopologyMap) {
 }
 
 func getPointID(x int, y int) string {
@@ -92,11 +97,11 @@ func makeTopologyMap(lines []string) *TopologyMap {
 
 			switch char {
 			case startChar:
-				point.value = 'a' - 1
-				topologyMap.start = point
+				point.value = 'a'
+				topologyMap.low = point
 			case endChar:
 				point.value = 'z' + 1
-				topologyMap.end = point
+				topologyMap.high = point
 			}
 
 			if len(topologyMap.graph) <= y {
@@ -112,7 +117,6 @@ func makeTopologyMap(lines []string) *TopologyMap {
 
 func main() {
 	lines := utils.ReadFileIntoLines("./input.txt")
-	topologyMap := makeTopologyMap(lines)
-	fmt.Println(getFewestSteps(topologyMap))
-	// partTwo("./input_test.txt")
+	fmt.Println(getFewestSteps(makeTopologyMap(lines), "up"))
+	fmt.Println(getFewestSteps(makeTopologyMap(lines), "down"))
 }
