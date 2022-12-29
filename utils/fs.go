@@ -15,6 +15,19 @@ func Readfile(path string) *os.File {
 	return file
 }
 
+func ReadFileIntoBytes(path string) [][]byte {
+	file := Readfile(path)
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	lines := [][]byte{}
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Bytes())
+	}
+
+	return lines
+}
+
 func ReadFileIntoLines(path string) []string {
 	file := Readfile(path)
 	defer file.Close()
